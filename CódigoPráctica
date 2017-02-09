@@ -1,0 +1,643 @@
+/*
+* Practica realizada por:
+*
+* Arturo Barbero Pérez
+* Raúl Sesé Vega
+*/
+
+#include <iostream>
+#include <fstream>
+#include <stdio.h>
+#include <iomanip>
+#include <string>
+#include <locale>
+#include <cmath>
+
+using namespace std;
+const int MAX_PROD = 25;
+const int PROD_NULO = 0;
+const int CENTINELA = -1;
+
+typedef int tArray[MAX_PROD];
+
+
+/*Esta función muestra las distintas opciones, valida la opción elegida y devuelve dicha opción.*/
+int menu();
+
+/*Dada la opción escogida en el menú, la ejecuta.*/
+void ejecutarOpc(int opc, tArray fila, int & tam, int & contador);
+
+/*Pide al usuario el nombre del fichero donde cargará la fila. Si el fichero existe la carga y la muestra. Si no, la fila se inicializa como vacía.*/
+void ejecutarLeerFichero(tArray fila, int & tam);
+
+/*Dado un fichero y un array, carga en él los números que contiene el fichero. Además pasa por referencia el número de cifras cargadas.*/
+void leerFilaFich(istream &fich, tArray fila, int &tam);
+
+/*Dado el array con los números ya cargados en él, los muestra en pantalla.*/
+void mostrarFila(const tArray fila, int tam);
+
+/*Dado el array con el tamaño de este, pide al usuario el nombre del fichero donde guardará la fila y si logra abrirlo,
+guarda en el fichero la fila.*/
+void ejecutarGuardarFichero(const tArray fila, int tam);
+
+/*Dado el fichero, el array y el tamaño de este, guarda en dicho fichero el contenido de la fila.*/
+void escribirFilaFich(ostream &fich, const tArray fila, int tam);
+
+/*Dado el array y el tamaño de este; pide al usuario la posición inicial del segmento a levantar, la posición final y la posición de inicio
+donde quieres soltar ese segmento. Si es posible realiza el movimiento, y sino informa al usuario de ello. Devuelve un booleano para indicar
+si se ha realizado con éxito.*/
+bool ejecutarGrua(tArray fila, int tam);
+
+/*Dado un array, el tamaño de este, y las dos posiciones; comprueba si es posible realizar ese movimiento con las posiciones dadas. Devuelve un
+booleano para ello.*/
+bool esPosibleGrua1Entre(const tArray fila, int tam, int posIni, int posSoltar);
+
+/*Dado el tamaño del array y una posición cualquiera; verifica si la posición es válida en el array de tamaño tam. Para ello devuelve un booleano.*/
+bool esPosValida(int tam, int pos);
+
+/*Dado un array y una posición cualquiera; comprueba si esa posición está vacía. Para ello devuelve un booleano.*/
+bool estaVacia(const tArray fila, int pos);
+
+/*Dado un array, el tamaño, y dos posiciones; realiza el movimiento de la grúa entre esas dos posiciones. Devuelve un booleano si se ha realizado
+con éxito el movimiento.*/
+bool grua1Elemento(tArray fila, int tam, int posIni, int posSoltar);
+
+/*Dado un array y el tamaño de este; pide al usuario la posición desde la que empujará, el número de desplazamientos y la dirección. Si es posible realiza
+el movimiento.*/
+bool ejecutarExcavadora(tArray fila, int tam);
+
+/*Dado un array, su tamaño, una posición inicial y una dirección; devuelve la posición del primer hueco libre de la fila, si comenzando por la posición inicial
+avanza paso a paso hacia la direccion escogida.*/
+int posHuecoLibreDir(const tArray fila, int tam, int posIni, int direccion);
+
+/*Dado un array, su tamaño, una posición inicial y una dirección; realiza el movimiento de la excavadora desde posIni hacia una dirección, empujando desde
+su posición todos los elementos adyacentes hacia la dirección escogida. Devuelve un booleano para indicar que se ha realizado con éxito el movimiento.*/
+bool excavadora1Dir(tArray fila, int tam, int posIni, int direccion);
+
+
+/*-----/ VERSIÓN 2 \------*/
+
+/*Dado el tamaño del array, la posición inicial, la posición final y la posición donde sueltas el segmento; devuelve un booleano que indica si el segmento a
+levantar no tiene su extremo derecho antes que el izquierdo y si todas la posiciones involucradas son válidas en la fila de tamaño tam.*/
+bool sonPosicionesPosiblesGrua(int tam, int posIni, int posFin, int posSoltar);
+
+/*Dado un array, su tamaño, la posición inicial, la final y la posición donde sueltas el segmento; devuelve si es posible dejar caer todos los materiales
+de la fila desde posIni hasta posFina partir de posSoltar.*/
+bool esPosibleGrua(const tArray fila, int tam, int posIni, int posFin, int posSoltar);
+
+/*Dado un array, la posición inicial, la final y el rango donde pueden colisionar entre sí los elementos del segmento escogido; comprueba si en ese rango,
+tanto a la derecha como a la izquierda hay un número que no pertenece a ese segmento. Devuelve un booleano para ello.*/
+bool compruebaRango(const tArray fila, int posIni, int posFin, int rangoSegmento);
+
+/*Dado un array, la posición inicial, la final y la posición donde sueltas el segmento; comprueba si fuera del rango de colisión entre ellos mismos, puede
+chocar algún elemento con otro que no sea del segmento. Para ello devuelve un booleano.*/
+bool compruebaNoRango(const tArray fila, int posIni, int posFin, int posSoltar);
+
+/*Dado un array, la posición inicial, la final, y la posición donde sueltas el segmento; valida que puedan meterse números dentro de un segmento con huecos.
+Para ello devuelve un booleano.*/
+bool compruebaRango2(const tArray fila, int posIni, int posFin, int posSoltar);
+
+/*Dado un array, la posición donde sueltas el segmento y la longitud de este; cuenta los huecos que hay desde posSoltar hasta que se acabe el segmento.
+Devuelve la cuenta realizada.*/
+int compruebaRango3(const tArray fila, int posSoltar, int longSegmento);
+
+/*Dado el tamaño del array, la posición inicial, la posición final y la posición donde sueltas el segmento; realiza el movimiento correspondiente a la grúa.
+Para ello devuelve un booleano que indica si se ha realizado con éxito.*/
+bool grua(tArray fila, int tam, int posIni, int posFin, int posSoltar);
+
+/*Dado el tamaño del array, la posición inicial, la posición final, el número de desplazamientos y la dirección; realiza el movimiento correspondiente a la
+excavadora. Para ello devuelve un booleano que indica si se ha realizado con éxito.*/
+bool excavadora(tArray fila, int tam, int posIni, int numDespla, int direccion);
+
+/*----/ VERSION 3 \-----*/
+
+/*Dado un array y su tamaño; devuelve si los materiales de la fila están ordenados de manera creciente ignorando los huecos que los separen. Devuelve un booleano
+para ello.*/
+bool filaOrdenada(const tArray fila, int tam);
+
+
+int main(){
+
+	setlocale(LC_ALL, "spanish");
+	system("chcp 1252");
+	cout << endl << endl;
+
+	tArray fila;
+	int tamanioArray, opcionElegida, contador = 0;
+
+
+	opcionElegida = menu();
+
+	while (opcionElegida != 0){
+		ejecutarOpc(opcionElegida, fila, tamanioArray, contador);
+
+		system("pause");
+		system("cls");
+		cout << endl << endl;
+		opcionElegida = menu();
+	}
+
+	cout << "\nHasta la próxima" << endl << endl;
+	system("pause");
+	return 0;
+}
+
+int menu(){
+
+	int opcion;
+
+	cout << " 1.- Cargar fila de fichero" << endl;
+	cout << " 2.- Guardar fila en fichero" << endl;
+	cout << " 3.- Usar grúa" << endl;
+	cout << " 4.- Usar excavadora" << endl;
+	cout << " 0.- Salir" << endl << endl << "\t";
+	cout << "Opción: ";
+	cin >> opcion;
+
+	while (opcion < 0 || opcion > 4 || cin.fail()){
+		cin.clear(); cin.sync();
+		cout << "\n¡Opción no válida!" << endl << endl << "\t";
+		cout << "Opción: ";
+		cin >> opcion;
+	}
+	cin.sync();
+
+	return opcion;
+}
+
+void ejecutarOpc(int opc, tArray fila, int & tam, int & contador){
+
+	switch (opc){
+	case 1:
+		ejecutarLeerFichero(fila, tam);
+		contador = 0;
+		cout << "Número de movimientos: " << contador << endl;
+		break;
+	case 2:
+		ejecutarGuardarFichero(fila, tam);
+		break;
+	case 3:
+		cout << endl;
+		mostrarFila(fila, tam);
+		if (ejecutarGrua(fila, tam)) contador++;
+		if (filaOrdenada(fila, tam)) cout << "\n¡La fila está ordenada!" << endl;
+		else cout << "\nLa fila no está ordenada todavía." << endl;
+		cout << "Número de movimientos: " << contador << endl;
+		break;
+	case 4:
+		cout << endl;
+		mostrarFila(fila, tam);
+		if (ejecutarExcavadora(fila, tam)) contador++;
+		if (!filaOrdenada(fila, tam)) cout << "\nLa fila no está ordenada todavía." << endl;
+		else cout << "\n¡La fila está ordenada!" << endl;
+		cout << "Número de movimientos: " << contador << endl;
+		break;
+	}
+
+}
+
+void ejecutarLeerFichero(tArray fila, int & tam){
+	string nombreFich;
+	ifstream archivo;
+
+	cout << "\nIntroduzca el nombre del fichero con extensión '.txt' de donde quiere cargar la fila: ";
+	getline(cin, nombreFich);
+	cout << endl;
+
+	archivo.open(nombreFich);
+
+	if (archivo.is_open()){
+		leerFilaFich(archivo, fila, tam);
+		cout << "\nSe ha cargado con éxito la fila." << endl << endl;
+		mostrarFila(fila, tam);
+	}
+	else {
+		cout << "No se ha podido abrir." << endl;
+		tam = 0; // Se inicializa la fila como vacía, es decir, con tamaño 0.
+	}
+	archivo.close();
+}
+
+void leerFilaFich(istream &fich, tArray fila, int &tam){
+	int i = 0;
+	fich >> fila[i];
+	while ((fila[i] != CENTINELA) && (i < MAX_PROD)){
+		i++;
+		fich >> fila[i];
+	}
+	tam = i; //	Incluye la posición del centinela
+}
+
+void mostrarFila(const tArray fila, int tam){
+
+	int i = 0;
+
+	if (tam > 0){
+
+		//------------------------- Fila de arriba
+		while (i < tam){
+			if (fila[i] == PROD_NULO){
+				cout << "|" << setw(2) << " ";
+				i++;
+			}
+			else{
+				cout << "|" << setw(2) << fila[i];
+				i++;
+			}
+		}
+		cout << "|" << endl;
+		//------------------------ Fila del medio
+		i = 0;
+		while (i < tam){
+			cout << "---";
+			i++;
+		}
+		cout << "-" << endl;
+		//------------------------ Fila de abajo
+		i = 0;
+		while (i < tam){
+			cout << "|" << setw(2) << i;
+			i++;
+		}
+		cout << "|" << endl << endl;
+	}
+	else cout << "La fila está vacía." << endl << endl;
+}
+
+void ejecutarGuardarFichero(const tArray fila, int tam){
+
+	string nombreFich;
+	ofstream archivo;
+
+	cout << "\nIntroduzca el nombre del fichero con extensión '.txt' donde quiere guardar la fila: ";
+	getline(cin, nombreFich);
+	cout << endl;
+
+	archivo.open(nombreFich);
+
+	if (archivo.is_open()){
+		escribirFilaFich(archivo, fila, tam);
+		cout << "\nSe ha guardado con éxito la fila." << endl << endl;
+		mostrarFila(fila, tam);
+	}
+	else {
+		cout << "\nNo se ha podido guardar correctamente." << endl;
+	}
+	archivo.close();
+}
+
+void escribirFilaFich(ostream &fich, const tArray fila, int tam){
+
+	int i = 0;
+	fich << fila[i];
+	while ((fila[i] != CENTINELA) && (i < tam)){
+		i++;
+		fich << " " << fila[i];
+	}
+}
+
+bool ejecutarGrua(tArray fila, int tam){
+	bool OK = false;
+
+	int inicial, final, soltar;
+
+	cout << "\nIntroduce la posición inicial del segmento a levantar: ";
+	cin >> inicial;
+	cout << endl;
+	cout << "\nIntroduce la posición final del segmento a levantar: ";
+	cin >> final;
+	cout << endl;
+	cout << "\nIntroduce la posición de inicio donde deseas soltar el segmento: ";
+	cin >> soltar;
+	cout << endl;
+
+	if ((sonPosicionesPosiblesGrua(tam, inicial, final, soltar)) && (esPosibleGrua(fila, tam, inicial, final, soltar))){
+
+		if (grua(fila, tam, inicial, final, soltar)){
+			cout << "El movimiento se ha realizado con éxito." << endl << endl;
+			OK = true;
+		}
+	}
+	else cout << "No es posible realizar ese movimiento." << endl << endl;
+
+
+	mostrarFila(fila, tam);
+
+	return OK;
+}
+
+bool esPosValida(int tam, int pos){
+	bool valida = false;
+
+	if ((pos >= 0) && (pos < tam)) valida = true;
+
+	return valida;
+}
+
+bool estaVacia(const tArray fila, int pos){
+	bool vacia = false;
+
+	if (fila[pos] == 0) vacia = true;
+
+	return vacia;
+}
+
+bool esPosibleGrua1Entre(const tArray fila, int tam, int posIni, int posSoltar){
+	bool posible = false;
+
+	if ((esPosValida(tam, posIni)) && (esPosValida(tam, posSoltar)) && (estaVacia(fila, posSoltar))) posible = true;
+
+	return posible;
+}
+
+bool grua1Elemento(tArray fila, int tam, int posIni, int posSoltar){
+	bool movRealizado = false;
+
+	fila[posSoltar] = fila[posIni];
+	fila[posIni] = PROD_NULO;
+	movRealizado = true;
+
+	return movRealizado;
+}
+
+bool ejecutarExcavadora(tArray fila, int tam){
+
+	bool OK = false;
+
+	int posicion, direccion, desplazamientos;
+
+	cout << "\nIntroduce la posición desde la que empujará la excavadora: ";
+	cin >> posicion;
+
+	cout << "\nIntroduce la cantidad de desplazamientos a realizar: ";
+	cin >> desplazamientos;
+
+	cout << "\nIntroduce la dirección que quiere (1. Derecha, 2. Izquierda): ";
+	cin >> direccion;
+
+	if (!esPosValida(tam, posicion)){
+
+		cout << "\nNo es posible realizar ese movimiento." << endl << endl;  /* Si esPosValida es false, es decir, si la
+																				posicion no existe.*/
+	}
+	else{
+		if (excavadora(fila, tam, posicion, desplazamientos, direccion)){
+			cout << "\nEl desplazamiento ha sido realizado." << endl << endl;
+			OK = true;
+		}
+	}
+
+	mostrarFila(fila, tam);
+
+	return OK;
+}
+
+int posHuecoLibreDir(const tArray fila, int tam, int posIni, int direccion){
+	/*Direccion puede ser 1 (derecha) o -1 (izquierda)*/
+
+	int posicionHueco;
+	bool encontrado = false;
+
+	while ((posIni >= PROD_NULO) && (posIni < tam) && !encontrado){
+
+		if (estaVacia(fila, posIni)){
+			posicionHueco = posIni;
+			encontrado = true;
+		}
+		else posIni = posIni + direccion; //Si la direccion es 1 se va hacia la derecha, si es -1 se va hacia la izquierda
+	}
+	if (!encontrado) posicionHueco = posIni;
+
+	return posicionHueco;
+}
+
+bool excavadora1Dir(tArray fila, int tam, int posIni, int direccion){
+
+	bool realizado = false;
+	if (direccion == 2) direccion = -1;
+
+
+	for (int i = posHuecoLibreDir(fila, tam, posIni, direccion); i != posIni; i = i - direccion){
+
+		if (estaVacia(fila, i)){		  /*Evita desplazarlo todo hacia la pared y que desaparezcan numeros.*/
+
+			fila[i] = fila[i - direccion];
+			fila[i - direccion] = 0;
+		}
+	}
+
+	realizado = true;
+
+	return realizado;
+}
+
+/*----------------/ VERSION 2 \ ---------------*/
+
+bool sonPosicionesPosiblesGrua(int tam, int posIni, int posFin, int posSoltar){
+
+	bool esPosible = false, posiciones = false, extremos = true;
+
+	if (posFin < posIni) extremos = false;
+
+	if (esPosValida(tam, posIni) && esPosValida(tam, posFin) && esPosValida(tam, posSoltar) && esPosValida(tam, tam - 1)) posiciones = true;
+	// Se pone tam-1 en la ultima condición porque tam incluía el centinela
+
+	if (extremos && posiciones) esPosible = true;
+
+	return esPosible;
+}
+
+bool esPosibleGrua(const tArray fila, int tam, int posIni, int posFin, int posSoltar){
+
+	bool esPosible = true;
+	int longSegmento = (posFin + 1) - posIni;
+	int rangoSegmentoDerecha = posFin - posIni;
+	int rangoSegmentoIzquierda = -(posFin - posIni);
+	int diferenciaMovimiento = abs(posSoltar - posIni); //valor absoluto de ese calculo
+	tArray arrayAuxiliar;
+
+	if (posSoltar <= tam - longSegmento){
+		//Si esta en el rango
+		if (posSoltar <= (posIni + rangoSegmentoDerecha) && posSoltar >= (posIni - rangoSegmentoDerecha)){
+
+			//Si por la derecha hay algo y y se pueden meter numeros dentro de un segmento con huecos
+			if (!(compruebaRango(fila, posIni, posFin, rangoSegmentoDerecha)) && (compruebaRango2(fila, posIni, posFin, posSoltar))){ esPosible = true; }
+			//Si por la izquierda hay algo y se pueden meter numeros dentro de un segmento con huecos
+			else if (!(compruebaRango(fila, posIni, posFin, rangoSegmentoIzquierda)) && (compruebaRango2(fila, posIni, posFin, posSoltar))){ esPosible = true; }
+			//Si por la derecha no hay nada o por la izquierda no hay nada
+			else if (compruebaRango(fila, posIni, posFin, rangoSegmentoDerecha) || compruebaRango(fila, posIni, posFin, rangoSegmentoIzquierda)){ esPosible = true; }
+			//Comprueba si choca o no algo que esta fuera del rango
+			else if (compruebaNoRango(fila, posIni, posFin, posSoltar)){ esPosible = true; }
+			//Calcula las posiciones que se han movido y si hay esos huecos hacia la direccion donde se mueve, es posible
+			else if (diferenciaMovimiento <= compruebaRango3(fila, posSoltar, longSegmento)){ esPosible = true; }
+
+			else{
+				//cout << "4" << endl;
+				esPosible = false;
+			}
+			//cout << diferenciaMovimiento << endl << compruebaRango3(fila, posSoltar, longSegmento) << endl;
+		}
+		else if (compruebaNoRango(fila, posIni, posFin, posSoltar)) esPosible = true;
+
+		else{
+			//cout << "3" << endl;
+			esPosible = false;
+		}
+	}
+	else{
+		//cout << "2" << endl;
+		esPosible = false;
+	}
+
+	return esPosible;
+}
+
+// Para entender bien estas funciones que he creado, lee arriba en los comentarios de los prototipos como funcionan
+bool compruebaRango(const tArray fila, int posIni, int posFin, int rangoSegmento){
+	//comprueba que las posiciones al lado del segmento este vacias
+	bool vacio = true;
+
+	if (rangoSegmento < PROD_NULO){
+		int i = posIni + rangoSegmento;
+
+		while ((i < posIni) && vacio){
+			if (estaVacia(fila, i)){ i++; }
+			else{
+				//cout << "6" << endl;
+				vacio = false;
+			}
+		}
+	}
+	if (rangoSegmento > PROD_NULO){
+		int i = posFin + rangoSegmento;
+		while ((i > posFin) && vacio){
+			if (estaVacia(fila, i)){ i--; }
+			else{
+				//cout << "7" << endl;
+				vacio = false;
+			}
+		}
+	}
+
+	return vacio;
+}
+
+bool compruebaNoRango(const tArray fila, int posIni, int posFin, int posSoltar){
+	//comprueba si dos segmentos chocan estando fuera de rango
+	bool exito = true;
+
+	while ((posIni <= posFin) && exito){
+		if ((fila[posIni] != PROD_NULO) && (fila[posSoltar] != PROD_NULO)){ cout << "1" << endl; exito = false; }
+		else posIni++; posSoltar++;
+	}
+
+	return exito;
+}
+
+bool compruebaRango2(const tArray fila, int posIni, int posFin, int posSoltar){
+	//valida que puedan meterse numeros dentro de un segmento con huecos
+	bool exito = true;
+	int i = posIni + 1, j = posFin - 1;
+
+	while ((i <= j) && exito){
+		if ((fila[i] == PROD_NULO) && (fila[posSoltar + 1] != PROD_NULO)){ i++; }
+		else if ((fila[i] == PROD_NULO) && (fila[posSoltar + 1] == PROD_NULO)){ i++; }
+		else{
+			//cout << "5" << endl;
+			exito = false;
+		}
+	}
+
+	return exito;
+
+}
+
+int compruebaRango3(const tArray fila, int posSoltar, int longSegmento){
+	//cuenta los huecos que hay desde posSoltar hasta que se acabe el segmento
+	int contador = 1;
+	while (posSoltar <= longSegmento){
+		if (fila[posSoltar] == PROD_NULO){ contador++; }
+
+		posSoltar++;
+	}
+
+	return contador;
+}
+
+bool grua(tArray fila, int tam, int posIni, int posFin, int posSoltar){
+
+	bool grua = false;
+
+	tArray arrayAuxiliar;
+	int j = 0, s = posSoltar, i = posIni;
+	int longSegmento = (posFin + 1) - posIni;
+
+	if (!estaVacia(fila, i) && (i < tam) && (i <= posFin) && (i >= 0)){ // Evita que guarde un 0 y que lo sustituya por un numero que haya antes colocado.
+		while (j < longSegmento){
+			arrayAuxiliar[j] = fila[i];
+			fila[i] = PROD_NULO;
+			i++; j++;
+		}
+		j = 0;
+
+		while (j < longSegmento){
+			if (arrayAuxiliar[j] == PROD_NULO){
+				j++; s++;
+			}
+			else{
+				fila[s] = arrayAuxiliar[j];
+				j++; s++;
+			}
+		}
+		grua = true;
+	}
+
+	return grua;
+}
+
+bool excavadora(tArray fila, int tam, int posIni, int numDespla, int direccion){
+
+	bool exito = false;
+	int j = 0, i = posIni;
+
+	while (j < numDespla){
+
+		if (excavadora1Dir(fila, tam, posIni, direccion)){
+			if (direccion == 2) posIni--;
+			if (direccion == 1) posIni++;
+		}
+		j++;
+	}
+	exito = true;
+
+	return exito;
+}
+
+
+/*---------------/ VERSION 3 \---------------*/
+
+bool filaOrdenada(const tArray fila, int tam){
+
+	bool OK = true;
+	int i = 0, numAnterior = 0;
+	while ((i < tam - 1) && OK){
+
+		if (fila[i] < fila[i + 1]){
+			if (fila[i] == fila[i + 1] + 1) i++;
+			else i++;
+		}
+
+		else if (fila[i + 1] == PROD_NULO){
+			numAnterior = fila[i];
+			i++;
+			while (fila[i] == PROD_NULO && (i < tam - 1)){
+				i++;
+			}
+			if ((numAnterior > fila[i]) && (fila[i] != PROD_NULO)){ OK = false; }
+		}
+
+		else{ OK = false; }
+	}
+
+	return OK;
+}
